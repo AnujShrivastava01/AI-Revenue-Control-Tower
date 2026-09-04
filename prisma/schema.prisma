@@ -1,0 +1,501 @@
+// Financial Control Tower — relational model.
+//
+// The running application materialises this schema deterministically in memory
+// (lib/demo/dataset.ts), which is what lets the demo work with no database and
+// still be internally consistent. This file is the reference for a persistent
+// deployment: the types in lib/types.ts mirror these models one-for-one, so
+// moving to Postgres is a repository-layer change, not a UI change.
+//
+//   npx prisma generate
+//   npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentMethod {
+  upi
+  card
+  netbanking
+  wallet
+}
+
+enum DeviceType {
+  android
+  ios
+  web
+}
+
+enum TransactionStatus {
+  captured
+  failed
+  refunded
+}
+
+enum Severity {
+  critical
+  opportunity
+  watch
+}
+
+enum InvestigationStatus {
+  investigating
+  action_pending
+  monitoring
+  resolved
+}
+
+enum ActionStatus {
+  pending_approval
+  approved
+  executing
+  completed
+  failed
+  rejected
+  blocked_by_policy
+}
+
+enum AuditActor {
+  ai
+  merchant
+  api
+  policy
+  system
+}
+
+model Merchant {
+  id          String   @id
+  name        String
+  legalName   String
+  mcc         String
+  currency    String   @default("INR")
+  onboardedAt DateTime
+
+  customers        Customer[]
+  products         Product[]
+  transactions     Transaction[]
+  settlements      Settlement[]
+  invoices         Invoice[]
+  subscriptions    Subscription[]
+  checkoutSessions CheckoutSession[]
+  anomalies        Anomaly[]
+  investigations   Investigation[]
+  actions          Action[]
+  auditEvents      AuditEvent[]
+  memories         MerchantMemory[]
+  policies         Policy[]
+}
+
+model Customer {
+  id           String   @id
+  merchantId   String
+  handle       String
+  firstSeenAt  DateTime
+  lifetimeValue Int
+  orders       Int
+
+  merchant         Merchant          @relation(fields: [merchantId], references: [id])
+  transactions     Transaction[]
+  invoices         Invoice[]
+  subscriptions    Subscription[]
+  checkoutSessions CheckoutSession[]
+
+  @@index([merchantId])
+}
+
+model Product {
+  id         String @id
+  merchantId String
+  sku        String
+  name       String
+  category   String
+  price      Int
+
+  merchant         Merchant          @relation(fields: [merchantId], references: [id])
+  transactions     Transaction[]
+  refunds          Refund[]
+  checkoutSessions CheckoutSession[]
+
+  @@unique([merchantId, sku])
+}
+
+model Transaction {
+  id         String            @id
+  merchantId String
+  customerId String
+  productId  String
+  amount     Int
+  currency   String            @default("INR")
+  method     PaymentMethod
+  bank       String
+  device     DeviceType
+  status     TransactionStatus
+  createdAt  DateTime
+  errorCode  String?
+  errorReason String?
+  rrn        String?
+  vpa        String?
+  /// Set when the transaction is attributed to a detected anomaly.
+  anomalyId  String?
+  /// Deterministic model output; only meaningful on failed transactions.
+  recoveryProbability Float?
+  /// Member of the bounded cohort a recovery action may target.
+  highIntent Boolean @default(false)
+
+  merchant      Merchant       @relation(fields: [merchantId], references: [id])
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  product       Product        @relation(fields: [productId], references: [id])
+  anomaly       Anomaly?       @relation(fields: [anomalyId], references: [id])
+  paymentEvents PaymentEvent[]
+  refunds       Refund[]
+  chargebacks   Chargeback[]
+  evidence      Evidence[]
+
+  @@index([merchantId, createdAt])
+  @@index([status, method, bank])
+  @@index([anomalyId])
+}
+
+model PaymentEvent {
+  id            String   @id @default(cuid())
+  transactionId String
+  at            DateTime
+  type          String
+  gatewayCode   String?
+  detail        String
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([transactionId, at])
+}
+
+model Refund {
+  id            String   @id
+  transactionId String
+  productId     String
+  amount        Int
+  reason        String
+  status        String
+  createdAt     DateTime
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  product     Product     @relation(fields: [productId], references: [id])
+
+  @@index([productId, createdAt])
+}
+
+model Chargeback {
+  id            String   @id
+  transactionId String
+  amount        Int
+  reasonCode    String
+  status        String
+  createdAt     DateTime
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+}
+
+model Settlement {
+  id               String    @id
+  merchantId       String
+  utr              String    @unique
+  amount           Int
+  fees             Int
+  tax              Int
+  expectedAt       DateTime
+  settledAt        DateTime?
+  status           String
+  varianceAmount   Int       @default(0)
+  transactionCount Int
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, expectedAt])
+}
+
+model CheckoutSession {
+  id            String   @id
+  merchantId    String
+  customerId    String
+  productId     String
+  amount        Int
+  stage         String
+  completed     Boolean
+  dropOffReason String?
+  createdAt     DateTime
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@index([merchantId, createdAt])
+}
+
+model Subscription {
+  id            String   @id
+  merchantId    String
+  customerId    String
+  planName      String
+  amount        Int
+  interval      String
+  status        String
+  nextChargeAt  DateTime
+  failedCharges Int      @default(0)
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+}
+
+model Invoice {
+  id          String   @id
+  merchantId  String
+  customerId  String
+  amount      Int
+  issuedAt    DateTime
+  dueAt       DateTime
+  status      String
+  daysOverdue Int      @default(0)
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([merchantId, status])
+}
+
+model Anomaly {
+  id            String   @id
+  merchantId    String
+  kind          String
+  title         String
+  severity      Severity
+  detectedAt    DateTime
+  headline      String
+  detail        String
+  impact        Int
+  recoverable   Int
+  confidence    Float
+  observedValue Float
+  baselineValue Float
+  unit          String
+  metricLabel   String
+  affectedCount Int
+
+  merchant      Merchant       @relation(fields: [merchantId], references: [id])
+  transactions  Transaction[]
+  investigation Investigation?
+
+  @@index([merchantId, detectedAt])
+}
+
+model Investigation {
+  id            String              @id
+  merchantId    String
+  anomalyId     String              @unique
+  title         String
+  status        InvestigationStatus
+  severity      Severity
+  impact        Int
+  recoverable   Int
+  confidence    Float
+  openedAt      DateTime
+  summary       String
+  /// Root cause, kept inline: one investigation has exactly one.
+  rootCause         String
+  rootCauseMechanism String
+  observedShare     Float
+  baselineShare     Float
+
+  merchant        Merchant         @relation(fields: [merchantId], references: [id])
+  anomaly         Anomaly          @relation(fields: [anomalyId], references: [id])
+  evidence        Evidence[]
+  scenarios       Scenario[]
+  recommendations Recommendation[]
+  actions         Action[]
+  timeline        TimelineEntry[]
+
+  @@index([merchantId, openedAt])
+}
+
+model Evidence {
+  id              String  @id
+  investigationId String
+  kind            String
+  label           String
+  summary         String
+  weight          Float
+  transactionId   String?
+  /// Label/value pairs rendered in the evidence drawer.
+  facts           Json
+
+  investigation Investigation @relation(fields: [investigationId], references: [id])
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id])
+
+  @@index([investigationId])
+}
+
+model TimelineEntry {
+  id              String     @id @default(cuid())
+  investigationId String
+  at              DateTime
+  actor           AuditActor
+  label           String
+  detail          String?
+
+  investigation Investigation @relation(fields: [investigationId], references: [id])
+
+  @@index([investigationId, at])
+}
+
+model Scenario {
+  id                      String  @id
+  investigationId         String
+  key                     String
+  name                    String
+  description             String
+  expectedRecovery        Int
+  expectedCost            Int
+  expectedAdditionalLoss  Int
+  netExpectedBenefit      Int
+  probability             Float
+  customerContactRisk     String
+  reachableCustomers      Int
+  recommended             Boolean @default(false)
+  linkedActionId          String?
+  assumptions             Json
+
+  investigation Investigation @relation(fields: [investigationId], references: [id])
+
+  @@index([investigationId])
+}
+
+model Recommendation {
+  id              String @id
+  investigationId String
+  scenarioKey     String
+  statement       String
+  reason          String
+  /// deterministic_decision_engine | llm_assisted
+  generatedBy     String
+  linkedActionId  String
+
+  investigation Investigation @relation(fields: [investigationId], references: [id])
+
+  @@index([investigationId])
+}
+
+model Action {
+  id                   String       @id
+  merchantId           String
+  investigationId      String
+  policyId             String
+  kind                 String
+  scenarioKey          String
+  title                String
+  description          String
+  rationale            String
+  status               ActionStatus
+  risk                 String
+  requiresApproval     Boolean
+  targetCustomers      Int
+  maxAmountPerCustomer Int
+  maxAttempts          Int
+  attemptsUsed         Int          @default(0)
+  totalExposure        Int
+  expectedRecovery     Int
+  successProbability   Float
+  guardrails           Json
+  createdAt            DateTime
+  approvedAt           DateTime?
+  approvedBy           String?
+  parentActionId       String?
+  fallbackActionId     String?
+
+  merchant      Merchant      @relation(fields: [merchantId], references: [id])
+  investigation Investigation @relation(fields: [investigationId], references: [id])
+  policy        Policy        @relation(fields: [policyId], references: [id])
+  result        ActionResult?
+
+  @@index([merchantId, status])
+}
+
+model ActionResult {
+  id               String   @id @default(cuid())
+  actionId         String   @unique
+  ok               Boolean
+  at               DateTime
+  code             String
+  message          String
+  recoveredAmount  Int      @default(0)
+  attempted        Int
+  succeeded        Int
+  failed           Int
+  gateway          String
+  gatewayReference String?
+  /// Verification report: checks, ledger delta, verdict.
+  verification     Json?
+
+  action Action @relation(fields: [actionId], references: [id])
+}
+
+model Policy {
+  id            String   @id
+  merchantId    String
+  name          String
+  version       String
+  effectiveFrom DateTime
+  /// Deterministic rule set; see lib/policies/policyEngine.ts.
+  rules         Json
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  actions  Action[]
+}
+
+model AuditEvent {
+  id         String     @id
+  merchantId String
+  at         DateTime
+  actor      AuditActor
+  event      String
+  detail     String
+  refType    String
+  refId      String
+  /// ok | failed | blocked | info
+  result     String
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, at])
+  @@index([refType, refId])
+}
+
+model MerchantMemory {
+  id             String   @id
+  merchantId     String
+  key            String
+  title          String
+  statement      String
+  baselineLabel  String
+  baselineValue  String
+  currentLabel   String
+  currentValue   String
+  /// normal | drifting | unusual
+  status         String
+  confidence     Float
+  observations   Int
+  source         String
+  learnedFrom    String
+  why            String
+  evidence       Json
+  series         Json
+  unit           String
+  lastUpdated    DateTime
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, key])
+}

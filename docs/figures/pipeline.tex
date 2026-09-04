@@ -1,0 +1,53 @@
+% Decision-safety pipeline: from model output to audited outcome.
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={draw=linegrey, fill=white, rounded corners=1.5pt,
+              minimum width=34mm, minimum height=8mm, align=center, inner sep=2pt},
+  soft/.style={box, draw=inkmid, dashed},
+  hard/.style={box, draw=ink, very thick},
+  gate/.style={box, draw=amber, very thick, fill=amberbg},
+  note/.style={font=\scriptsize\ttfamily, text=inkmid, anchor=west},
+  arr/.style={-{Latex[length=1.6mm]}, draw=inkmid, thick}
+]
+
+\def\dy{11.5mm}
+
+\node[soft] (llm)    at (0, 0)        {Language model};
+\node[hard] (zod)    at (0, -1*\dy)   {Zod validation};
+\node[hard] (pol)    at (0, -2*\dy)   {Policy engine};
+\node[hard] (hum)    at (0, -3*\dy)   {Human approval};
+\node[gate] (exec)   at (0, -4*\dy)   {Action executor};
+\node[box]  (rzp)    at (0, -5*\dy)   {Razorpay test API};
+\node[hard] (ver)    at (0, -6*\dy)   {Verification};
+\node[box]  (aud)    at (0, -7*\dy)   {Audit event};
+
+\foreach \a/\b in {llm/zod, zod/pol, pol/hum, hum/exec, exec/rzp, rzp/ver, ver/aud}
+  \draw[arr] (\a) -- (\b);
+
+\node[note] at ($(llm.east)  + (5mm,0)$) {narration + scenario key only};
+\node[note] at ($(zod.east)  + (5mm,0)$) {schemas.ts --- reject on parse failure};
+\node[note] at ($(pol.east)  + (5mm,0)$) {RECOVERY\_V2, server-side, deterministic};
+\node[note] at ($(hum.east)  + (5mm,0)$) {required above low risk};
+\node[note] at ($(exec.east) + (5mm,0)$) {re-derives cohort from the ledger};
+\node[note] at ($(rzp.east)  + (5mm,0)$) {rzp\_test\_* only; live keys refused};
+\node[note] at ($(ver.east)  + (5mm,0)$) {re-reads outcome against guardrails};
+\node[note] at ($(aud.east)  + (5mm,0)$) {actor / event / reference / result};
+
+% Blocked branches
+\node[box, draw=red, text=red, minimum width=24mm] (blk)
+  at (-42mm, -2*\dy) {blocked};
+\draw[arr, draw=red] (pol.west) -- node[above, font=\scriptsize, text=red] {violation} (blk.east);
+
+\node[box, draw=red, text=red, minimum width=24mm] (rej)
+  at (-42mm, -3*\dy) {rejected};
+\draw[arr, draw=red] (hum.west) -- node[above, font=\scriptsize, text=red] {declined} (rej.east);
+
+\node[box, draw=red, text=red, minimum width=24mm] (fbk)
+  at (-42mm, -5*\dy) {fallback offered};
+\draw[arr, draw=red] (rzp.west) -- node[above, font=\scriptsize, text=red] {failure} (fbk.east);
+
+\draw[arr, draw=red] (blk.south) -- (rej.north);
+\draw[arr, draw=red] (rej.south) -- ++(0,-\dy) -- (fbk.north);
+\draw[arr, draw=red] (fbk.south) -- ++(0,-24mm) -| (aud.west);
+
+\end{tikzpicture}

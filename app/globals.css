@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surfaces */
+  --canvas: #f7f8f9;
+  --surface: #ffffff;
+  --raised: #fbfbfc;
+
+  /* Lines */
+  --line: #e7e9ec;
+  --line-strong: #d5d9de;
+
+  /* Text */
+  --ink: #0c0e12;
+  --ink-2: #33373f;
+  --ink-3: #6a707b;
+  --ink-4: #9aa1ab;
+
+  /* Accent — restrained fintech blue */
+  --accent: #1a4fd6;
+  --accent-soft: #eef2fe;
+
+  /* Status */
+  --ok: #146b47;
+  --ok-soft: #ecf6f0;
+  --warn: #8a5a00;
+  --warn-soft: #fdf4e3;
+  --danger: #a52217;
+  --danger-soft: #fdf0ee;
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "cv05" 1, "cv08" 1, "ss01" 1;
+}
+
+/* Tabular figures everywhere a number is shown */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Section eyebrow label */
+.eyebrow {
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+::selection {
+  background: #d9e2fb;
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Hairline grid used on data-dense panels */
+.hairline-grid {
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+  background-size: 1px 100%;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d8dce1;
+  border-radius: 8px;
+  border: 3px solid var(--canvas);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c2c8cf;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #eef0f2;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

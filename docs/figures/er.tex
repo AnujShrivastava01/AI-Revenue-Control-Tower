@@ -1,0 +1,72 @@
+% Entity relationships, ledger layer (left) and intelligence layer (right).
+\begin{tikzpicture}[
+  font=\scriptsize,
+  ent/.style={draw=linegrey, fill=white, rounded corners=1.5pt,
+              minimum width=25mm, minimum height=6.5mm, align=center, inner sep=2pt},
+  led/.style={ent},
+  intel/.style={ent, draw=inkmid, thick},
+  gov/.style={ent, draw=amber, thick, fill=amberbg},
+  rel/.style={draw=inkmid, thin},
+  lbl/.style={font=\tiny, text=inkmid, fill=white, inner sep=1pt}
+]
+
+\def\cx{34mm}
+\def\cy{11mm}
+
+% ---- ledger layer -------------------------------------------------------
+\node[led] (mer)  at (0, 0)                 {Merchant};
+\node[led] (cus)  at (-1.05*\cx, -1.4*\cy)  {Customer};
+\node[led] (pro)  at (0, -1.4*\cy)          {Product};
+\node[led] (set)  at (1.05*\cx, -1.4*\cy)   {Settlement};
+\node[led] (txn)  at (-0.5*\cx, -2.9*\cy)   {Transaction};
+\node[led] (pev)  at (-1.75*\cx, -2.9*\cy)  {PaymentEvent};
+\node[led] (ref)  at (-1.75*\cx, -4.2*\cy)  {Refund};
+\node[led] (cbk)  at (-1.75*\cx, -5.5*\cy)  {Chargeback};
+\node[led] (chk)  at (0.62*\cx, -3.6*\cy)   {CheckoutSession};
+\node[led] (sub)  at (0.62*\cx, -4.9*\cy)   {Subscription};
+\node[led] (inv)  at (0.62*\cx, -6.2*\cy)   {Invoice};
+
+% ---- intelligence and governance layer ----------------------------------
+\node[intel] (ano)  at (2.0*\cx, -1.4*\cy)  {Anomaly};
+\node[intel] (ivg)  at (2.0*\cx, -2.9*\cy)  {Investigation};
+\node[intel] (evd)  at (3.1*\cx, -2.1*\cy)  {Evidence};
+\node[intel] (tml)  at (3.1*\cx, -3.4*\cy)  {TimelineEntry};
+\node[intel] (scn)  at (2.0*\cx, -4.2*\cy)  {Scenario};
+\node[intel] (rec)  at (3.1*\cx, -4.7*\cy)  {Recommendation};
+\node[gov]   (act)  at (2.0*\cx, -5.5*\cy)  {Action};
+\node[intel] (ares) at (3.1*\cx, -6.0*\cy)  {ActionResult};
+\node[intel] (mem)  at (2.0*\cx, -7.0*\cy)  {MerchantMemory};
+\node[gov]   (pcy)  at (3.1*\cx, -7.3*\cy)  {Policy};
+\node[gov]   (aev)  at (0.62*\cx, -7.5*\cy) {AuditEvent};
+
+% ---- ledger relations ---------------------------------------------------
+\draw[rel] (mer) -- node[lbl,pos=0.55]{1:N} (cus);
+\draw[rel] (mer) -- node[lbl,pos=0.55]{1:N} (pro);
+\draw[rel] (mer) -- node[lbl,pos=0.55]{1:N} (set);
+\draw[rel] (cus) -- node[lbl,pos=0.5]{1:N} (txn);
+\draw[rel] (pro) -- node[lbl,pos=0.5]{1:N} (txn);
+\draw[rel] (txn) -- node[lbl,pos=0.5]{1:N} (pev);
+\draw[rel] (txn) -- node[lbl,pos=0.45]{1:N} (ref);
+\draw[rel] (txn) -- node[lbl,pos=0.45]{1:N} (cbk);
+\draw[rel] (cus) to[out=-45,in=180] node[lbl,pos=0.6]{1:N} (chk);
+\draw[rel] (cus) to[out=-70,in=180] node[lbl,pos=0.62]{1:N} (sub);
+\draw[rel] (cus) to[out=-88,in=180] node[lbl,pos=0.64]{1:N} (inv);
+
+% ---- intelligence relations ---------------------------------------------
+\draw[rel] (txn) to[out=25,in=200] node[lbl,pos=0.55]{N:1} (ano);
+\draw[rel] (ano) -- node[lbl,pos=0.5]{1:1} (ivg);
+\draw[rel] (ivg) -- node[lbl,pos=0.55]{1:N} (evd);
+\draw[rel] (ivg) -- node[lbl,pos=0.55]{1:N} (tml);
+\draw[rel] (ivg) -- node[lbl,pos=0.5]{1:N} (scn);
+\draw[rel] (scn) -- node[lbl,pos=0.55]{1:N} (rec);
+\draw[rel] (scn) -- node[lbl,pos=0.5]{1:N} (act);
+\draw[rel] (act) -- node[lbl,pos=0.55]{1:1} (ares);
+\draw[rel] (act) -- node[lbl,pos=0.6]{N:1} (pcy);
+\draw[rel] (mem) -- node[lbl,pos=0.5]{informs} (act);
+\draw[rel] (evd) to[out=170,in=40] node[lbl,pos=0.72]{N:1} (txn);
+\draw[rel] (act) to[out=195,in=15] node[lbl,pos=0.5]{writes} (aev);
+
+\node[font=\scriptsize\bfseries, text=inkmid] at (-0.5*\cx, 0.75*\cy) {Ledger};
+\node[font=\scriptsize\bfseries, text=inkmid] at (2.5*\cx, 0.75*\cy) {Intelligence and governance};
+
+\end{tikzpicture}

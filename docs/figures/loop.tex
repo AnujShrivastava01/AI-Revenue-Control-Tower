@@ -1,0 +1,56 @@
+% Ten-stage operating loop, each stage annotated with its service module.
+\begin{tikzpicture}[
+  font=\footnotesize,
+  stage/.style={
+    draw=linegrey, fill=white, rounded corners=1.5pt,
+    minimum width=21mm, minimum height=7.5mm, align=center, inner sep=1.5pt
+  },
+  gate/.style={stage, draw=amber, very thick, fill=amberbg},
+  human/.style={stage, draw=ink, very thick},
+  mod/.style={font=\scriptsize\ttfamily, text=inkmid, align=center},
+  arr/.style={-{Latex[length=1.6mm]}, draw=inkmid, thick}
+]
+
+\def\dx{25.5mm}
+
+\node[stage] (s1) at (0*\dx, 0) {Observe};
+\node[stage] (s2) at (1*\dx, 0) {Remember};
+\node[stage] (s3) at (2*\dx, 0) {Detect};
+\node[stage] (s4) at (3*\dx, 0) {Investigate};
+\node[stage] (s5) at (4*\dx, 0) {Simulate};
+
+\node[stage] (s6) at (4*\dx, -19mm) {Recommend};
+\node[human] (s7) at (3*\dx, -19mm) {Approve};
+\node[gate]  (s8) at (2*\dx, -19mm) {Act};
+\node[stage] (s9) at (1*\dx, -19mm) {Verify};
+\node[stage] (s10) at (0*\dx, -19mm) {Learn};
+
+\node[mod, below=0.6mm of s1]  {observer.ts};
+\node[mod, below=0.6mm of s2]  {merchantMemory.ts};
+\node[mod, below=0.6mm of s3]  {anomalyDetector.ts};
+\node[mod, below=0.6mm of s4]  {investigator.ts};
+\node[mod, below=0.6mm of s5]  {counterfactual\\Engine.ts};
+
+\node[mod, below=0.6mm of s6]  {decisionEngine.ts};
+\node[mod, below=0.6mm of s7]  {policyEngine.ts\\+ human};
+\node[mod, below=0.6mm of s8]  {actionExecutor.ts};
+\node[mod, below=0.6mm of s9]  {verification.ts};
+\node[mod, below=0.6mm of s10] {merchantMemory.ts};
+
+\draw[arr] (s1) -- (s2);
+\draw[arr] (s2) -- (s3);
+\draw[arr] (s3) -- (s4);
+\draw[arr] (s4) -- (s5);
+\draw[arr] (s5.south) -- ++(0,-4mm) -- (s6.north);
+\draw[arr] (s6) -- (s7);
+\draw[arr] (s7) -- (s8);
+\draw[arr] (s8) -- (s9);
+\draw[arr] (s9) -- (s10);
+\draw[arr] (s10.north) -- ++(0,4mm) -- (s1.south);
+
+\node[font=\scriptsize, text=amber, anchor=west] at ($(s8.south) + (-11mm,-9mm)$)
+  {\textbf{Act} is the only stage permitted to reach a payment gateway.};
+\node[font=\scriptsize, text=inkmid, anchor=west] at ($(s8.south) + (-11mm,-13mm)$)
+  {It is unreachable without a passing policy decision and, above low risk, a named human.};
+
+\end{tikzpicture}
