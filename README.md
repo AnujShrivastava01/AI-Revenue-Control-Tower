@@ -14,7 +14,7 @@
 [![Razorpay](https://img.shields.io/badge/Razorpay-Test_Mode_Only-1A4FD6?style=flat-square)](https://razorpay.com)
 [![Status](https://img.shields.io/badge/Data-Synthetic_%2F_Test-orange?style=flat-square)](#the-seeded-batch)
 
-**[Live Demo Video](public/video.mp4)** · **[Documentation (PDF)](docs/report.pdf)** · **[Repository](https://github.com/AnujShrivastava01/AI-Revenue-Control-Tower)**
+**[Live ](https://ai-revenue-control-tower.vercel.app/)** · **[Documentation (PDF)](docs/report.pdf)** · **[Repository](https://github.com/AnujShrivastava01/AI-Revenue-Control-Tower)**
 
 </div>
 
