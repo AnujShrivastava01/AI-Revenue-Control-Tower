@@ -13,6 +13,36 @@ The centrepiece is one end-to-end flow:
 > recommendation → human approval → bounded Razorpay test action → **failure handling** →
 > verification → audit trail
 
+**Author:** [Anuj Shrivastava](https://www.linkedin.com/in/anujshrivastava1) ·
+[Portfolio](https://www.anujshrivastava.tech) ·
+[Repository](https://github.com/AnujShrivastava01/AI-Revenue-Control-Tower)
+
+A recorded walkthrough of the full loop is embedded on the landing page (`/` → *Watch it
+work*) and lives at [`public/video.mp4`](public/video.mp4).
+
+---
+
+## Architecture at a glance
+
+```
+                 ┌────────────┐     ┌──────────────┐     ┌─────────────┐
+   Ledger  ───▶  │  Observe   │ ─▶ │ Investigate  │ ─▶  │   Decide    │
+  (webhooks +    │  observer.ts│    │ anomalyDetector,│  │ counterfactual│
+   polling)      └────────────┘     │ investigator.ts │  │ + decisionEngine│
+                                     └──────────────┘     └──────┬──────┘
+                                                                  │
+        ┌───────────────┐     ┌───────────────┐     ┌────────────▼──────────┐
+        │    Verify     │ ◀─ │      Act       │ ◀─ │  Human approval (UI)   │
+        │ verification.ts│    │ actionExecutor,│    │ /actions/[id]          │
+        └───────┬───────┘     │ policyEngine   │    └────────────────────────┘
+                │              └───────────────┘
+                ▼
+        Audit trail + merchant memory (learn, feed back into baseline)
+```
+
+Every arrow above is a real module boundary — see the stage-to-module table below for exact
+file paths.
+
 ---
 
 ## Run it

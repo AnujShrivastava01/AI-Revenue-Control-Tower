@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Eye, Search, GitMerge, Zap, CheckCircle2 } from "lucide-react";
+import { Eye, Search, GitMerge, Zap, CheckCircle2, ArrowRight, ArrowDown } from "lucide-react";
 
 const STEPS = [
   {
@@ -38,16 +38,49 @@ const STEPS = [
 
 export function Features() {
   return (
-    <section id="how-it-works" className="py-24 px-5 lg:px-8 max-w-5xl mx-auto">
-      <div className="mb-20 text-center">
+    <section id="how-it-works" className="py-24 px-5 lg:px-8 max-w-6xl mx-auto">
+      <div className="mb-16 text-center">
         <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-ink-3 mb-4">How it Works</h2>
         <p className="text-3xl sm:text-4xl font-bold tracking-tight text-ink max-w-2xl mx-auto leading-tight">
           The autonomous <span className="text-accent">financial control loop</span>
         </p>
       </div>
 
+      {/* Flow diagram: node + arrow chain */}
+      <div className="mb-24 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0">
+        {STEPS.map((step, i) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.id} className="flex flex-col md:flex-row items-center w-full md:w-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="flex flex-col items-center gap-3 shrink-0"
+              >
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-line bg-surface shadow-card">
+                  <Icon size={22} className="text-accent" />
+                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] font-mono font-semibold text-surface">
+                    {i + 1}
+                  </span>
+                </div>
+                <span className="text-[13px] font-semibold text-ink">{step.title}</span>
+              </motion.div>
+
+              {i < STEPS.length - 1 && (
+                <>
+                  <ArrowRight size={18} className="hidden md:block mx-3 shrink-0 text-ink-4" />
+                  <ArrowDown size={18} className="block md:hidden my-2 shrink-0 text-ink-4" />
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Step-by-step demonstration */}
       <div className="relative">
-        {/* Vertical line connecting steps */}
         <div className="absolute left-[27px] top-4 bottom-4 w-px bg-line md:left-1/2 md:-ml-px hidden sm:block" />
 
         <div className="space-y-16 sm:space-y-24">
@@ -66,12 +99,10 @@ export function Features() {
                   isEven ? "md:flex-row" : "md:flex-row-reverse"
                 }`}
               >
-                {/* Center Node */}
                 <div className="hidden sm:flex absolute left-[11px] md:left-1/2 md:-ml-[17px] top-1 items-center justify-center w-9 h-9 rounded-full border-4 border-canvas bg-surface shadow-sm z-10 text-ink">
                   <span className="font-mono text-xs font-semibold tnum">0{i + 1}</span>
                 </div>
 
-                {/* Content Box */}
                 <div className={`flex-1 w-full ${isEven ? "md:text-right" : "md:text-left"}`}>
                   <div className={`flex items-center gap-3 mb-4 ${isEven ? "md:justify-end" : "md:justify-start"}`}>
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface shadow-card sm:hidden">
@@ -82,13 +113,12 @@ export function Features() {
                     </div>
                     <h3 className="text-xl font-semibold text-ink">{step.title}</h3>
                   </div>
-                  
+
                   <p className="text-ink-3 leading-relaxed text-[15px]">
                     {step.description}
                   </p>
                 </div>
 
-                {/* Empty spacer for alternating layout */}
                 <div className="hidden md:block flex-1" />
               </motion.div>
             );
