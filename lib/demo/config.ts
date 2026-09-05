@@ -134,8 +134,45 @@ export const ANOMALY_LEDGER = {
   checkout_drop: { impact: 72_000, recoverable: 43_000 },
   chargeback_exposure: { impact: 58_000, recoverable: 15_000 },
   settlement_discrepancy: { impact: 38_000, recoverable: 38_000 },
+  card_testing: { impact: 195_000, recoverable: 195_000 },
+  duplicate_charge: { impact: 86_000, recoverable: 86_000 },
 } as const;
-// Σ impact = ₹8.42L · Σ recoverable = ₹5.17L
+// Σ impact = ₹11.23L · Σ recoverable = ₹7.98L
+
+/**
+ * Card-testing fraud burst — a bot validating stolen card numbers in a short,
+ * high-velocity window. Every figure below is a fixed narrative constant, the
+ * same design as PLANTED_EVIDENCE: stable numbers for a stable demo.
+ */
+export const CARD_TESTING = {
+  windowStart: "2026-02-18T12:47:00+05:30",
+  windowEnd: "2026-02-18T13:05:00+05:30",
+  attempts: 214,
+  newProfiles: 189,
+  declined: 205,
+  authorized: 9,
+  largestAuthorized: 58,
+  avgAttemptedAmount: 42,
+  normalCardAvgAmount: 216,
+  declineRate: 0.96,
+  baselineDeclineRate: 0.024,
+} as const;
+
+/**
+ * Duplicate-charge incident — a checkout retry re-submitted a payment after a
+ * gateway timeout without an idempotency check, capturing the same order twice.
+ */
+export const DUPLICATE_CHARGE = {
+  windowStart: "2026-02-18T11:10:00+05:30",
+  windowEnd: "2026-02-18T11:40:00+05:30",
+  pairs: 42,
+  medianGapSeconds: 61,
+  examples: [
+    { order: "ORD-88213", amount: 1_299, firstAt: "2026-02-18T11:12:04+05:30", gapSeconds: 61 },
+    { order: "ORD-88240", amount: 2_150, firstAt: "2026-02-18T11:19:22+05:30", gapSeconds: 47 },
+    { order: "ORD-88266", amount: 899, firstAt: "2026-02-18T11:27:51+05:30", gapSeconds: 74 },
+  ],
+} as const;
 
 /** Cumulative outcomes across the 42-day synthetic history. */
 export const BATCH_TOTALS = {

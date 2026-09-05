@@ -290,16 +290,31 @@ export async function runStage(
     case "gateway": {
       // Non-payment actions do not touch the gateway at all; saying otherwise
       // would be a lie about what the system did.
-      if (action.kind === "refund_hold" || action.kind === "settlement_reconcile") {
+      if (
+        action.kind === "refund_hold" ||
+        action.kind === "settlement_reconcile" ||
+        action.kind === "duplicate_refund" ||
+        action.kind === "fraud_block"
+      ) {
+        const CODE: Record<string, string> = {
+          refund_hold: "REFUND_HOLD_APPLIED",
+          settlement_reconcile: "RECONCILIATION_FILED",
+          duplicate_refund: "DUPLICATE_REFUNDS_QUEUED",
+          fraud_block: "PROFILES_BLOCKED",
+        };
+        const MESSAGE: Record<string, string> = {
+          refund_hold: "Refund auto-approval paused for the targeted SKU. No gateway call was required.",
+          settlement_reconcile:
+            "Reconciliation request filed with the transaction-level match attached. No gateway call was required.",
+          duplicate_refund: `Refund queued for all ${action.targetCustomers} duplicate captures, matched exactly to the original amount. No gateway call was required for this action class.`,
+          fraud_block: `${action.targetCustomers} flagged profiles blocked and step-up verification enabled for new-profile card attempts. No gateway call was required.`,
+        };
         const result: ActionResult = {
           actionId: action.id,
           ok: true,
           at: at("gateway"),
-          code: action.kind === "refund_hold" ? "REFUND_HOLD_APPLIED" : "RECONCILIATION_FILED",
-          message:
-            action.kind === "refund_hold"
-              ? "Refund auto-approval paused for the targeted SKU. No gateway call was required."
-              : "Reconciliation request filed with the transaction-level match attached. No gateway call was required.",
+          code: CODE[action.kind],
+          message: MESSAGE[action.kind],
           recoveredAmount: 0,
           attempted: action.targetCustomers,
           succeeded: action.targetCustomers,

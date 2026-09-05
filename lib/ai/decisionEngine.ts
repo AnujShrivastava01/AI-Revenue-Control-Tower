@@ -177,6 +177,67 @@ export function getActions(): ActionPlan[] {
       demoOutcome: "success",
     },
 
+    {
+      id: "act_2045",
+      investigationId: "inv_1047",
+      scenarioKey: "alternate_method",
+      kind: "duplicate_refund",
+      title: "Auto-refund all duplicate captures",
+      description: `Refund the second capture on all ${C.DUPLICATE_CHARGE.pairs} duplicate pairs, matched exactly to the original order amount, before any customer disputes the charge.`,
+      status: "pending_approval",
+      createdAt: "2026-02-18T11:56:40+05:30",
+      createdBy: "decision_engine",
+      policyId: "RECOVERY_V2",
+      targetCustomers: C.DUPLICATE_CHARGE.pairs,
+      maxAmountPerCustomer: 2500,
+      maxAttempts: 1,
+      attemptsUsed: 0,
+      totalExposure: C.ANOMALY_LEDGER.duplicate_charge.impact,
+      expectedRecovery: C.ANOMALY_LEDGER.duplicate_charge.recoverable,
+      successProbability: 1,
+      risk: "medium",
+      requiresApproval: true,
+      rationale:
+        "Refunding proactively costs exactly the amount already wrongly captured. Waiting risks the same amount plus chargeback fees and dispute handling once customers notice on their own statements.",
+      guardrails: [
+        { label: "Scope", value: `${C.DUPLICATE_CHARGE.pairs} matched duplicate pairs only` },
+        { label: "Amount", value: "Refund equals the duplicate capture, to the paisa" },
+        { label: "Customer impact", value: "One unsolicited refund notification, no action needed from them" },
+        { label: "Evidence", value: "Timeout + retry log attached to every pair" },
+      ],
+      demoOutcome: "success",
+    },
+    {
+      id: "act_2046",
+      investigationId: "inv_1046",
+      scenarioKey: "alternate_method",
+      kind: "fraud_block",
+      title: "Block flagged profiles and require step-up verification",
+      description: `Block the ${C.CARD_TESTING.newProfiles} flagged profiles outright and require CVV plus 3-D Secure step-up for any new profile's first card attempt.`,
+      status: "pending_approval",
+      createdAt: "2026-02-18T13:09:30+05:30",
+      createdBy: "decision_engine",
+      policyId: "RECOVERY_V2",
+      targetCustomers: C.CARD_TESTING.newProfiles,
+      maxAmountPerCustomer: 0,
+      maxAttempts: 1,
+      attemptsUsed: 0,
+      totalExposure: C.ANOMALY_LEDGER.card_testing.impact,
+      expectedRecovery: C.ANOMALY_LEDGER.card_testing.recoverable,
+      successProbability: 0.97,
+      risk: "medium",
+      requiresApproval: true,
+      rationale:
+        "The pattern is unambiguous, but blocking real customer profiles by mistake has its own cost, so a human confirms before the block is applied rather than the system silently locking accounts.",
+      guardrails: [
+        { label: "Scope", value: `${C.CARD_TESTING.newProfiles} flagged profiles` },
+        { label: "Money movement", value: "None — no capture has succeeded above ₹58" },
+        { label: "Step-up", value: "CVV + 3-D Secure on next new-profile card attempt" },
+        { label: "Reversal", value: "Any wrongly blocked profile can be restored in one click" },
+      ],
+      demoOutcome: "success",
+    },
+
     // ---- Completed history -------------------------------------------------
     {
       id: "act_2031",
@@ -361,6 +422,18 @@ export function getRecommendation(investigationId: string): Recommendation {
       statement: "File a reconciliation request with matched evidence",
       reason:
         "The transaction-level match is complete, so this can be filed as an evidenced claim rather than an open query.",
+    },
+    inv_1046: {
+      action: "act_2046",
+      statement: "Block flagged profiles and require step-up verification",
+      reason:
+        "Stops the attack at the source with no money movement, while leaving a human to confirm before any profile is actually blocked.",
+    },
+    inv_1047: {
+      action: "act_2045",
+      statement: "Auto-refund all duplicate captures",
+      reason:
+        "Refunding now costs exactly what was wrongly taken; waiting risks the same amount again in chargeback fees once customers notice.",
     },
   };
   const entry = map[investigationId] ?? map.inv_1043;

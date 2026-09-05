@@ -241,7 +241,7 @@ sampled:
 | Acute window trough (14:30–16:10) | 55.1% |
 | Bank X share of failures | 21% baseline → 87% incident (4.1×) |
 | High-intent cohort | 184 customers · ₹1,92,000 · all under the ₹5,000 ceiling |
-| Rollup: at risk / recoverable / recovered | ₹8.42L / ₹5.17L / ₹3.84L |
+| Rollup: at risk / recoverable / recovered | ₹11.23L / ₹7.98L / ₹3.84L |
 
 `GET /api/diagnostics` returns all of these computed live, useful when changing the
 generator.
@@ -249,15 +249,17 @@ generator.
 </details>
 
 <details>
-<summary><strong>The five required anomalies</strong></summary>
+<summary><strong>The flagged anomalies</strong></summary>
 
 <br />
 
 1. **UPI payment degradation** — `inv_1042`, ₹4.82L, critical
-2. **Refund spike on one SKU** — `inv_1043`, Aurora Buds Pro 3.7% → 8.9%, ₹1.10L
-3. **Checkout conversion drop** — `inv_1044`, 93.8% → 91.8%, 61 sessions, ₹72K
-4. **Settlement discrepancy** — `inv_1045`, ₹38K unreconciled on 1 of 14 cycles
-5. **Recoverable failed payments** — 184 high-intent customers, ₹1.26L
+2. **Card testing attack** — `inv_1046`, 214 authorizations in 18 minutes, ₹1.95L, critical
+3. **Refund spike on one SKU** — `inv_1043`, Aurora Buds Pro 3.7% → 8.9%, ₹1.10L
+4. **Duplicate payment charges** — `inv_1047`, 42 customers billed twice, ₹86K, critical
+5. **Checkout conversion drop** — `inv_1044`, 93.8% → 91.8%, 61 sessions, ₹72K
+6. **Settlement discrepancy** — `inv_1045`, ₹38K unreconciled on 1 of 14 cycles
+7. **Recoverable failed payments** — 184 high-intent customers, ₹1.26L
 
 </details>
 

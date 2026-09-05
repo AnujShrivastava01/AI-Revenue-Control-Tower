@@ -144,7 +144,9 @@ export interface Anomaly {
     | "settlement_discrepancy"
     | "recoverable_failures"
     | "chargeback_exposure"
-    | "receivables_ageing";
+    | "receivables_ageing"
+    | "fraud_pattern"
+    | "duplicate_charge";
   title: string;
   severity: Severity;
   detectedAt: string;
@@ -254,7 +256,13 @@ export interface ActionPlan {
   id: string;
   investigationId: string;
   scenarioKey: Scenario["key"];
-  kind: "payment_retry" | "alternate_method_offer" | "refund_hold" | "settlement_reconcile";
+  kind:
+    | "payment_retry"
+    | "alternate_method_offer"
+    | "refund_hold"
+    | "settlement_reconcile"
+    | "fraud_block"
+    | "duplicate_refund";
   title: string;
   description: string;
   status: ActionStatus;

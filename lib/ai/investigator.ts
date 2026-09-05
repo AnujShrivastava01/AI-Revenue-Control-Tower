@@ -21,7 +21,7 @@ import type { EvidenceItem, Investigation, Scenario, TimelineEntry } from "@/lib
  * on the page is traceable to rows in the ledger.
  */
 
-const INVESTIGATION_IDS = ["inv_1042", "inv_1043", "inv_1044", "inv_1045"] as const;
+const INVESTIGATION_IDS = ["inv_1042", "inv_1043", "inv_1044", "inv_1045", "inv_1046", "inv_1047"] as const;
 
 function upiInvestigation(): Investigation {
   const ds = getDataset();
@@ -542,11 +542,278 @@ function settlementInvestigation(): Investigation {
   };
 }
 
+function cardTestingInvestigation(): Investigation {
+  const anomaly = getAnomaly("anm_card_testing")!;
+  const ct = C.CARD_TESTING;
+  const skew = ct.normalCardAvgAmount / ct.avgAttemptedAmount;
+
+  const scenarios = scoreScenarios({
+    atRisk: C.ANOMALY_LEDGER.card_testing.impact,
+    cohortSize: ct.attempts,
+    reachableCustomers: ct.newProfiles,
+    retryRecoveryRate: 0.55,
+    alternateRecoveryRate: 0.97,
+    doNothingLossRate: 1,
+    retryCostPerAttempt: 0,
+    retryAttempts: 1,
+    alternateCostPerCustomer: 0,
+    doNothingProbability: 0.9,
+    labels: {
+      retry: "Rate-limit new-profile card attempts",
+      alternate: "Block cohort and require step-up verification",
+      retryDetail: "Cap card authorization attempts per new profile to 3 per hour, slowing the bot without affecting genuine repeat customers.",
+      alternateDetail: `Block the ${ct.newProfiles} flagged profiles outright and require CVV plus 3-D Secure step-up for any new profile's first card attempt.`,
+    },
+    linkedActions: { alternate: "act_2046" },
+  });
+
+  return {
+    id: "inv_1046",
+    anomalyId: anomaly.id,
+    title: "Card testing attack",
+    status: "action_pending",
+    severity: "critical",
+    impact: C.ANOMALY_LEDGER.card_testing.impact,
+    recoverable: C.ANOMALY_LEDGER.card_testing.recoverable,
+    confidence: 0.95,
+    openedAt: "2026-02-18T13:06:10+05:30",
+    affectedCount: ct.attempts,
+    summary: `${ct.attempts} card authorizations, averaging ₹${ct.avgAttemptedAmount}, arrived from ${ct.newProfiles} customer profiles never seen before, all within an 18-minute window starting 12:47 IST. ${formatPercent(ct.declineRate, 0)} were declined by the issuer before completion. The amount, velocity and decline pattern match a bot validating a list of stolen card numbers rather than real purchases.`,
+    metrics: [
+      { label: "Attempts flagged", value: ct.attempts.toLocaleString("en-IN"), sub: "18-minute window" },
+      { label: "Exposure if unblocked", value: formatShortINR(C.ANOMALY_LEDGER.card_testing.impact), tone: "danger" },
+      { label: "Decline rate", value: formatPercent(ct.declineRate, 0), sub: `baseline ${formatPercent(ct.baselineDeclineRate, 1)}` },
+      { label: "Confidence", value: "95%" },
+    ],
+    evidence: [
+      {
+        id: "evd_ct_velocity",
+        investigationId: "inv_1046",
+        kind: "aggregate",
+        label: "Attempt velocity",
+        weight: 0.97,
+        summary: "One authorization attempt every 5 seconds during the burst, against a normal cadence of one every 40 seconds.",
+        facts: [
+          { label: "Burst window", value: "12:47 – 13:05 IST" },
+          { label: "Attempts", value: String(ct.attempts), mono: true },
+          { label: "Normal cadence", value: "~1 per 40s" },
+          { label: "Burst cadence", value: "~1 per 5s" },
+        ],
+      },
+      {
+        id: "evd_ct_profile",
+        investigationId: "inv_1046",
+        kind: "aggregate",
+        label: "Profile age",
+        weight: 0.94,
+        summary: `${ct.newProfiles} of ${ct.attempts} attempts came from customer profiles created in the last hour, with no prior order history.`,
+        facts: [
+          { label: "New profiles", value: `${ct.newProfiles} of ${ct.attempts} (${formatPercent(ct.newProfiles / ct.attempts, 0)})` },
+          { label: "Prior order history", value: "None" },
+          { label: "Shipping address provided", value: "4% of attempts" },
+        ],
+      },
+      {
+        id: "evd_ct_amount",
+        investigationId: "inv_1046",
+        kind: "comparison",
+        label: "Value skew",
+        weight: 0.9,
+        summary: `Average attempted value ₹${ct.avgAttemptedAmount}, against this merchant's normal card order value of ₹${ct.normalCardAvgAmount} — a ${skew.toFixed(1)}× drop consistent with balance-testing micro-charges.`,
+        facts: [
+          { label: "Average attempted", value: `₹${ct.avgAttemptedAmount}` },
+          { label: "Normal average", value: `₹${ct.normalCardAvgAmount}` },
+          { label: "Skew", value: `${skew.toFixed(1)}× below normal` },
+        ],
+      },
+      {
+        id: "evd_ct_decline",
+        investigationId: "inv_1046",
+        kind: "aggregate",
+        label: "Decline outcome",
+        weight: 0.88,
+        summary: `${formatPercent(ct.declineRate, 0)} of attempts were declined at the issuer before completion; only ${ct.authorized} authorized, all under ₹${ct.largestAuthorized + 2}.`,
+        facts: [
+          { label: "Declined", value: `${ct.declined} of ${ct.attempts} (${formatPercent(ct.declineRate, 0)})` },
+          { label: "Authorized", value: String(ct.authorized) },
+          { label: "Largest authorized", value: `₹${ct.largestAuthorized}` },
+          { label: "Decline codes", value: "CARD_DECLINED, INVALID_CVV" },
+        ],
+      },
+    ],
+    rootCause: {
+      statement: "Automated card-testing bot probing stolen card numbers",
+      mechanism:
+        "The velocity, new-profile concentration and micro-amount pattern match how stolen card numbers are validated before the working ones are used for a larger purchase elsewhere. The checkout is being used as a free validation service, not as a real storefront.",
+      observedShare: ct.declineRate,
+      baselineShare: ct.baselineDeclineRate,
+      shareLabel: "Card decline rate during the burst",
+      supportingEvidenceIds: ["evd_ct_velocity", "evd_ct_profile", "evd_ct_amount", "evd_ct_decline"],
+      alternativesConsidered: [
+        { hypothesis: "Marketing campaign driving low-value trial purchases", verdict: "Rejected", rejectedBecause: "No campaign is live, and 96% of attempts have no shipping address, so there is nothing to deliver." },
+        { hypothesis: "Payment gateway misconfiguration", verdict: "Rejected", rejectedBecause: "UPI and netbanking attempts in the same window show a normal decline rate; only the card rail is affected." },
+        { hypothesis: "Legitimate customers using expired or cancelled cards", verdict: "Rejected", rejectedBecause: "Decline codes are dominated by CARD_DECLINED and INVALID_CVV, not EXPIRED_CARD, and attempts share no other legitimate pattern." },
+      ],
+    },
+    timeline: [
+      { at: "2026-02-18T13:05:44+05:30", actor: "ai", label: "Decline-rate spike detected", detail: "Card decline rate crossed the learned band for the merchant's card rail" },
+      { at: "2026-02-18T13:06:10+05:30", actor: "ai", label: "AI began investigation", detail: "Investigation inv_1046 opened, severity provisional" },
+      { at: "2026-02-18T13:07:20+05:30", actor: "ai", label: "Attempts segmented by profile age", detail: "189 of 214 attempts traced to profiles under 1 hour old" },
+      { at: "2026-02-18T13:08:05+05:30", actor: "ai", label: "Velocity and amount pattern matched", detail: "Signature consistent with automated card testing" },
+      { at: "2026-02-18T13:09:30+05:30", actor: "ai", label: "Block-and-verify action drafted", detail: "act_2046 awaiting approval" },
+    ],
+    scenarios,
+    recommendation: getRecommendation("inv_1046"),
+    segmentBreakdown: [
+      { label: "Declined", incident: ct.declineRate, baseline: ct.baselineDeclineRate },
+      { label: "New profiles", incident: ct.newProfiles / ct.attempts, baseline: 0.08 },
+    ],
+    successRateSeries: Array.from({ length: 6 }, (_, i) => ({
+      t: `${12 + Math.floor((47 + i * 4) / 60)}:${String((47 + i * 4) % 60).padStart(2, "0")}`,
+      rate: i === 0 ? 0.976 : Math.max(0.02, 0.976 - i * 0.19),
+      baseline: 0.976,
+    })),
+  };
+}
+
+function duplicateChargeInvestigation(): Investigation {
+  const anomaly = getAnomaly("anm_duplicate_charge")!;
+  const dc = C.DUPLICATE_CHARGE;
+
+  const scenarios = scoreScenarios({
+    atRisk: C.ANOMALY_LEDGER.duplicate_charge.impact,
+    cohortSize: dc.pairs,
+    reachableCustomers: dc.pairs,
+    retryRecoveryRate: 0.3,
+    alternateRecoveryRate: 1,
+    doNothingLossRate: 1,
+    retryCostPerAttempt: 8,
+    retryAttempts: 1,
+    alternateCostPerCustomer: 15,
+    doNothingProbability: 0.7,
+    labels: {
+      retry: "Wait for customers to self-report",
+      alternate: "Auto-refund all duplicate captures",
+      retryDetail: "Handle each duplicate only if the customer notices and contacts support.",
+      alternateDetail: `Immediately refund the second capture on all ${dc.pairs} duplicate pairs, matched exactly to the original order amount.`,
+    },
+    linkedActions: { alternate: "act_2045" },
+  });
+
+  return {
+    id: "inv_1047",
+    anomalyId: anomaly.id,
+    title: "Duplicate payment charges",
+    status: "action_pending",
+    severity: "critical",
+    impact: C.ANOMALY_LEDGER.duplicate_charge.impact,
+    recoverable: C.ANOMALY_LEDGER.duplicate_charge.recoverable,
+    confidence: 0.97,
+    openedAt: "2026-02-18T11:52:30+05:30",
+    affectedCount: dc.pairs,
+    summary: `Between 11:10 and 11:40 IST, ${dc.pairs} customers were charged twice for the same order. The checkout's retry logic re-submitted a payment after a gateway timeout without first checking whether the original attempt had already been captured, so both the timed-out attempt and the retry went through. Every affected pair shares the same customer, the same order amount, and a capture gap under 90 seconds.`,
+    metrics: [
+      { label: "Customers double-charged", value: String(dc.pairs) },
+      { label: "Amount to refund", value: formatShortINR(C.ANOMALY_LEDGER.duplicate_charge.impact), tone: "danger" },
+      { label: "Detection lag", value: "12 minutes", sub: "after the first duplicate" },
+      { label: "Confidence", value: "97%" },
+    ],
+    evidence: [
+      {
+        id: "evd_dc_pairing",
+        investigationId: "inv_1047",
+        kind: "aggregate",
+        label: "Pair match",
+        weight: 0.98,
+        summary: `Each of the ${dc.pairs} pairs matches on customer, amount and order reference, with the second capture landing 40 to 90 seconds after the first.`,
+        facts: [
+          { label: "Matched pairs", value: String(dc.pairs), mono: true },
+          { label: "Same customer & amount", value: "100%" },
+          { label: "Median gap", value: `${dc.medianGapSeconds} seconds` },
+          { label: "Order reference match", value: "100%" },
+        ],
+      },
+      {
+        id: "evd_dc_trigger",
+        investigationId: "inv_1047",
+        kind: "aggregate",
+        label: "Trigger condition",
+        weight: 0.95,
+        summary: "Every duplicate followed a gateway timeout response on the first attempt, which the checkout treated as a failure and retried automatically.",
+        facts: [
+          { label: "Preceded by gateway timeout", value: `${dc.pairs} of ${dc.pairs}` },
+          { label: "Retry path", value: "checkout-retry v3.2", mono: true },
+          { label: "Idempotency key checked", value: "No" },
+        ],
+      },
+      {
+        id: "evd_dc_window",
+        investigationId: "inv_1047",
+        kind: "aggregate",
+        label: "Time window",
+        weight: 0.85,
+        summary: "All duplicate pairs occurred inside one 30-minute window, matching a single gateway slowdown rather than an ongoing pattern.",
+        facts: [
+          { label: "Window", value: "11:10 – 11:40 IST" },
+          { label: "Pairs before window", value: "0" },
+          { label: "Pairs after window", value: "0" },
+        ],
+      },
+      ...dc.examples.map((ex, i) => ({
+        id: `evd_dc_example_${i}`,
+        investigationId: "inv_1047",
+        kind: "comparison" as const,
+        label: `${ex.order} captured twice`,
+        weight: 0.6 - i * 0.05,
+        summary: `${formatINR(ex.amount)} captured twice, ${ex.gapSeconds} seconds apart.`,
+        facts: [
+          { label: "Order", value: ex.order, mono: true },
+          { label: "Amount", value: `${formatINR(ex.amount)} × 2` },
+          { label: "First capture", value: timeIST(ex.firstAt), mono: true },
+          { label: "Gap", value: `${ex.gapSeconds}s` },
+        ],
+      })),
+    ],
+    rootCause: {
+      statement: "Checkout retry re-submitted a payment without an idempotency check",
+      mechanism:
+        "When the gateway responded slowly, the checkout's retry logic treated the timeout as a failed payment and resubmitted it automatically. It never checked whether the original request had already been captured on Razorpay's side, because the retry path does not carry an idempotency key. Both the original and the retry succeeded, so the customer was charged twice for one order.",
+      observedShare: 1,
+      baselineShare: 0,
+      shareLabel: "Duplicate pairs missing an idempotency key",
+      supportingEvidenceIds: ["evd_dc_pairing", "evd_dc_trigger"],
+      alternativesConsidered: [
+        { hypothesis: "Customer manually double-submitted the order", verdict: "Rejected", rejectedBecause: "Every pair is preceded by a logged gateway timeout, and the 40–90 second gap is too short and too consistent for manual resubmission." },
+        { hypothesis: "Refund already issued and this is stale data", verdict: "Rejected", rejectedBecause: "None of the 42 duplicate captures have a matching refund on the ledger." },
+        { hypothesis: "Pricing or tax recalculation created a second legitimate charge", verdict: "Rejected", rejectedBecause: "Both captures in every pair are for the identical amount, down to the paisa." },
+      ],
+    },
+    timeline: [
+      { at: "2026-02-18T11:41:10+05:30", actor: "ai", label: "Duplicate-capture pattern detected", detail: `${dc.pairs} same-customer, same-amount capture pairs inside 30 minutes` },
+      { at: "2026-02-18T11:52:30+05:30", actor: "ai", label: "AI began investigation", detail: "Investigation inv_1047 opened" },
+      { at: "2026-02-18T11:54:02+05:30", actor: "ai", label: "Retry path isolated", detail: "Missing idempotency key on checkout-retry v3.2 confirmed as the trigger" },
+      { at: "2026-02-18T11:56:40+05:30", actor: "ai", label: "Refund plan drafted", detail: "act_2045 awaiting approval, one refund per affected customer" },
+    ],
+    scenarios,
+    recommendation: getRecommendation("inv_1047"),
+    segmentBreakdown: [
+      { label: "Duplicate pairs missing idempotency key", incident: 1, baseline: 0 },
+    ],
+    successRateSeries: Array.from({ length: 6 }, (_, i) => ({
+      t: `11:${String(10 + i * 6).padStart(2, "0")}`,
+      rate: 1,
+      baseline: 1,
+    })),
+  };
+}
+
 const BUILDERS: Record<string, () => Investigation> = {
   inv_1042: upiInvestigation,
   inv_1043: refundInvestigation,
   inv_1044: checkoutInvestigation,
   inv_1045: settlementInvestigation,
+  inv_1046: cardTestingInvestigation,
+  inv_1047: duplicateChargeInvestigation,
 };
 
 export function getInvestigation(id: string): Investigation | undefined {
