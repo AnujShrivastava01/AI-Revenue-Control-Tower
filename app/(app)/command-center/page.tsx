@@ -211,7 +211,7 @@ export default async function CommandCenterPage({
           />
           <PriorityList anomalies={priorities} />
           <Panel>
-            <PanelHeader title="Ledger" meta="Seeded batch" />
+            <PanelHeader title="Ledger" meta="Current batch" />
             <dl className="divide-y divide-line">
               {[
                 { label: "Customers", value: ds.customers.length.toLocaleString("en-IN") },

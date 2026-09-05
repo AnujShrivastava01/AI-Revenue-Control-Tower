@@ -80,6 +80,22 @@ body {
   background-size: 1px 100%;
 }
 
+.hero-dot-field {
+  background-image:
+    radial-gradient(circle, rgb(26 79 214 / 0.2) 1.1px, transparent 1.3px),
+    radial-gradient(circle, rgb(106 112 123 / 0.14) 0.8px, transparent 1px);
+  background-position: 0 0, 15px 15px;
+  background-size: 30px 30px, 30px 30px;
+  filter: blur(0.3px);
+  mask-image: radial-gradient(ellipse 68% 62% at 50% 36%, black 8%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 68% 62% at 50% 36%, black 8%, transparent 78%);
+}
+
+.hero-soft-light {
+  background-image: radial-gradient(ellipse 52% 38% at 50% 28%, rgb(255 255 255 / 0.9), transparent 78%);
+  mix-blend-mode: screen;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
