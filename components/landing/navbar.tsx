@@ -36,7 +36,7 @@ export function Navbar({ mode }: NavbarProps) {
         </Link>
         <span className="hidden items-center gap-2 text-2xs uppercase tracking-[0.1em] text-ink-3 md:flex bg-raised px-2.5 py-1 rounded-full border border-line">
           <StatusDot tone={mode === "test" ? "ok" : "warn"} pulse />
-          {mode === "test" ? "Live test mode" : "Demo — synthetic data"}
+          {mode === "test" ? "Live test mode" : "Sandbox mode"}
         </span>
       </div>
 

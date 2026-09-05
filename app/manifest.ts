@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import logo from "./logo.png";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -11,7 +12,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#1a4fd6",
     icons: [
       {
-        src: "/logo.png",
+        src: logo.src,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: logo.src,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

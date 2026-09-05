@@ -178,8 +178,8 @@ export function ImpactPanel({ investigation }: { investigation: Investigation })
         ))}
       </dl>
       <p className="border-t border-line px-4 py-2.5 text-[12px] leading-relaxed text-ink-4">
-        Estimates derived from synthetic test data. Recoverable value is an amount-weighted
-        expectation over the affected cohort, not a guarantee.
+        Modelled estimate. Recoverable value is an amount-weighted expectation over the
+        affected cohort, not a guarantee.
       </p>
     </Panel>
   );

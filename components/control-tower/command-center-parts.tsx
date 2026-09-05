@@ -226,8 +226,8 @@ export function BatchStats({
   return (
     <Panel>
       <PanelHeader
-        title="Synthetic / test environment"
-        meta="Cumulative across the seeded 42-day batch"
+        title="Test environment summary"
+        meta="Cumulative across the last 42 days"
       />
       <dl className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 lg:grid-cols-5">
         {items.map((s) => (

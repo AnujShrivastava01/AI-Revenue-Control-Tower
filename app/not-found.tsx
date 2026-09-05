@@ -9,7 +9,7 @@ export default function NotFound() {
           That record does not exist in this environment.
         </h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-ink-3">
-          The seeded batch contains 10,000 transactions, four open investigations and nine
+          This workspace contains 10,000 transactions, four open investigations and nine
           actions. Anything outside that set will not resolve. Check the identifier, or start
           from the command centre.
         </p>

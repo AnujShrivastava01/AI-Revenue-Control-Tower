@@ -23,7 +23,7 @@ export default function MemoryPage() {
             What the AI knows about your business
           </h1>
           <p className="mt-2 max-w-[78ch] text-[13px] leading-relaxed text-ink-3">
-            Learned from {BATCH_TOTALS.historyDays} days of synthetic transaction history. These
+            Learned from {BATCH_TOTALS.historyDays} days of transaction history. These
             baselines are what turn a number into a signal: an 8.9% refund rate means nothing on
             its own, and everything against a 3.7% baseline this merchant held for 33 days.
             Every anomaly card elsewhere in the product is a comparison against something here.

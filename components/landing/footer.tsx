@@ -22,13 +22,12 @@ export function Footer() {
 
         <div className="max-w-xl text-left md:text-right">
           <div className="inline-flex rounded border border-line-strong bg-raised px-2 py-1 mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">Environment Disclaimer</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">Environment Notice</span>
           </div>
           <p className="text-[11px] leading-relaxed text-ink-4">
-            Synthetic / test environment. 10,000 seeded transactions across 42 days of
-            generated history for a fictional merchant. Gateway calls run against Razorpay
-            test mode or a clearly-labelled local adapter. No real money moves and no real
-            customer data is present.
+            Test environment. 10,000 transactions across 42 days of history for a sample
+            merchant. Gateway calls run against Razorpay test mode or a clearly-labelled
+            local adapter. No real money moves and no real customer data is present.
           </p>
         </div>
       </div>

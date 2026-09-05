@@ -26,7 +26,7 @@ export default function AppError({
       </h1>
       <p className="mt-2 text-[13.5px] leading-relaxed text-ink-3">
         The underlying data could not be read. Nothing was changed and no action was dispatched.
-        Retrying re-runs the read against the same seeded batch.
+        Retrying re-runs the same read.
       </p>
       {error.digest ? (
         <p className="mt-3 font-mono text-[11.5px] text-ink-4">reference {error.digest}</p>

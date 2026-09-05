@@ -210,12 +210,12 @@ export function TopBar({
               <div className="mt-0.5 font-mono text-[11px] text-ink-4">{merchant.id}</div>
               <div className="mt-2 flex items-center gap-2">
                 <Badge tone={gateway.mode === "test" ? "ok" : "warn"}>
-                  {gateway.mode === "test" ? "Live test mode" : "Demo data"}
+                  {gateway.mode === "test" ? "Live test mode" : "Sandbox data"}
                 </Badge>
                 <span className="text-xxs text-ink-3">MCC {merchant.mcc}</span>
               </div>
               <p className="mt-2.5 border-t border-line pt-2.5 text-[12.5px] leading-relaxed text-ink-3">
-                One merchant exists in this synthetic environment. Multi-merchant selection
+                One merchant exists in this environment. Multi-merchant selection
                 would read from the Merchant table without any change to these screens.
               </p>
             </div>

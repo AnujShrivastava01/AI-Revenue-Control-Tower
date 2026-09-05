@@ -52,7 +52,7 @@ export function getMode(): RazorpayModeInfo {
   if (!id || !secret) {
     return {
       mode: "mock",
-      label: "DEMO — SYNTHETIC DATA",
+      label: "SANDBOX MODE",
       detail:
         "No Razorpay credentials configured. Gateway calls are answered by a local adapter and are labelled as simulated.",
     };
@@ -62,7 +62,7 @@ export function getMode(): RazorpayModeInfo {
   } catch {
     return {
       mode: "mock",
-      label: "DEMO — SYNTHETIC DATA",
+      label: "SANDBOX MODE",
       detail: "Configured key is not a test key; live credentials are refused. Falling back to the local adapter.",
     };
   }

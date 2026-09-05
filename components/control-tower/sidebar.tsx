@@ -107,7 +107,7 @@ export function Sidebar({
           <div className="flex items-center gap-2 px-2.5 py-2">
             <StatusDot tone={gateway.mode === "test" ? "ok" : "warn"} pulse />
             <span className="text-2xs font-semibold uppercase tracking-[0.1em] text-ink-2">
-              {gateway.mode === "test" ? "Test mode" : "Demo mode"}
+              {gateway.mode === "test" ? "Test mode" : "Sandbox mode"}
             </span>
           </div>
           <div className="px-2.5 pb-2">

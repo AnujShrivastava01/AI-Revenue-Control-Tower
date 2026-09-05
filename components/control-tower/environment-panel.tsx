@@ -60,19 +60,18 @@ export function EnvironmentPanel({
       open={open}
       onClose={onClose}
       title="Environment"
-      subtitle="Data source, gateway mode, model status and demo controls"
+      subtitle="Data source, gateway mode, model status and environment controls"
     >
       <div className="space-y-6">
         <section>
           <h3 className="eyebrow mb-2.5">Data</h3>
           <div className="rounded-md border border-line bg-raised p-3">
             <div className="mb-2 flex items-center gap-2">
-              <Badge tone="warn">Synthetic / test environment</Badge>
+              <Badge tone="warn">Sandbox environment</Badge>
             </div>
             <p className="text-[13px] leading-relaxed text-ink-3">
-              10,000 transactions, 3,200 customers, 42 days of daily history, all generated
-              from a fixed seed. Identical on every run and every machine. No real merchant
-              or customer data is present.
+              10,000 transactions, 3,200 customers, 42 days of daily history, consistent
+              on every run and every machine. No real merchant or customer data is present.
             </p>
           </div>
         </section>
@@ -122,7 +121,7 @@ export function EnvironmentPanel({
         </section>
 
         <section>
-          <h3 className="eyebrow mb-2.5">Demo controls</h3>
+          <h3 className="eyebrow mb-2.5">Environment controls</h3>
           <div className="space-y-2">
             <div className="rounded-md border border-line p-3">
               <div className="mb-1.5 flex items-center gap-2">
@@ -131,7 +130,7 @@ export function EnvironmentPanel({
               </div>
               <p className="mb-3 text-[13px] leading-relaxed text-ink-3">
                 Re-runs the live pipeline — observe, detect, investigate, score, recommend —
-                over the seeded ledger and reports what each stage took.
+                over the ledger and reports what each stage took.
               </p>
               <Button onClick={runPipeline} disabled={running}>
                 {running ? "Running pipeline…" : "Run detection pipeline"}
@@ -166,7 +165,7 @@ export function EnvironmentPanel({
             <div className="rounded-md border border-line p-3">
               <div className="mb-1.5 flex items-center gap-2">
                 <RotateCcw size={14} strokeWidth={1.75} className="text-ink-3" />
-                <span className="text-[13px] font-medium text-ink">Reset demo</span>
+                <span className="text-[13px] font-medium text-ink">Reset environment</span>
               </div>
               <p className="mb-3 text-[13px] leading-relaxed text-ink-3">
                 Clears approvals, execution results and session audit events.
@@ -187,7 +186,7 @@ export function EnvironmentPanel({
                     <Check size={14} strokeWidth={2} /> Reset
                   </>
                 ) : (
-                  "Reset demo"
+                  "Reset environment"
                 )}
               </Button>
             </div>
