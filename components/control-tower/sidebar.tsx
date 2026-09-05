@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Activity,
@@ -11,12 +12,15 @@ import {
   Brain,
   Settings,
   TrendingUp,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDot } from "@/components/ui/primitives";
 import { EnvironmentPanel } from "./environment-panel";
+import { Onboarding } from "./onboarding";
 import type { RazorpayModeInfo } from "@/lib/razorpay/client";
 import type { AiStatus } from "@/lib/ai/llm";
+import logo from "@/app/logo.png";
 
 const NAV = [
   { href: "/command-center", label: "Command Center", icon: Gauge },
@@ -40,12 +44,24 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const [envOpen, setEnvOpen] = React.useState(false);
+  const [helpOpen, setHelpOpen] = React.useState(false);
+
+  // First-visit check against localStorage — must run post-mount (client only),
+  // so it lives in an effect rather than a lazy useState initializer, which
+  // would mismatch the server-rendered HTML.
+  React.useEffect(() => {
+    if (!window.localStorage.getItem("ct_onboarding_seen")) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time flag check, not state sync
+      setHelpOpen(true);
+    }
+  }, []);
 
   return (
     <>
-      <aside className="hidden w-[228px] shrink-0 flex-col border-r border-line bg-surface lg:flex">
+      <aside className="hidden w-[228px] shrink-0 flex-col border-r border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
         <div className="px-5 pb-5 pt-6">
-          <Link href="/command-center" className="block">
+          <Link href="/command-center" className="flex items-start gap-2.5">
+            <Image src={logo} alt="" width={30} height={30} className="rounded-md" />
             <div className="text-[12.5px] font-semibold uppercase leading-[1.35] tracking-[0.14em] text-ink">
               Financial
               <br />
@@ -106,6 +122,13 @@ export function Sidebar({
             <Settings size={15} strokeWidth={1.75} className="text-ink-4" />
             Environment
           </button>
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="flex w-full items-center gap-2.5 rounded-[4px] px-2.5 py-[7px] text-[13px] text-ink-3 transition-colors hover:bg-raised hover:text-ink"
+          >
+            <HelpCircle size={15} strokeWidth={1.75} className="text-ink-4" />
+            How this works
+          </button>
         </div>
       </aside>
 
@@ -139,6 +162,16 @@ export function Sidebar({
         onClose={() => setEnvOpen(false)}
         gateway={gateway}
         ai={ai}
+      />
+
+      <Onboarding
+        open={helpOpen}
+        onClose={() => {
+          setHelpOpen(false);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("ct_onboarding_seen", "1");
+          }
+        }}
       />
     </>
   );

@@ -33,7 +33,7 @@ export function AttentionCard({
 }) {
   const sev = SEVERITY[anomaly.severity];
   return (
-    <Panel className="flex flex-col overflow-hidden">
+    <Panel className="group flex flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-0.5">
       <div className={cn("h-[2px] w-full", sev.rule)} aria-hidden />
       <div className="flex flex-1 flex-col p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -67,7 +67,7 @@ export function AttentionCard({
             <ArrowRight
               size={14}
               strokeWidth={2}
-              className="transition-transform duration-150 group-hover:translate-x-0.5"
+              className="transition-transform duration-150 group-hover:translate-x-1"
             />
           </Link>
           <span className="text-xxs text-ink-4 tnum">
@@ -95,7 +95,10 @@ export function MetricStrip({ metrics }: { metrics: StripMetric[] }) {
     <Panel className="overflow-hidden">
       <div className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
         {metrics.map((m) => (
-          <div key={m.label} className="min-w-0 p-3.5">
+          <div
+            key={m.label}
+            className="min-w-0 p-3.5 transition-colors duration-150 hover:bg-raised"
+          >
             <div className="eyebrow mb-1.5">{m.label}</div>
             <div
               className={cn(

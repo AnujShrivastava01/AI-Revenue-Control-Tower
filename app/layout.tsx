@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import logo from "./logo.png";
+import { InstallPrompt } from "@/components/ui/install-prompt";
 import "./globals.css";
 
 const sans = Inter({
@@ -23,6 +25,10 @@ export const metadata: Metadata = {
   },
   description:
     "See financial problems before they become losses. An operating layer that observes merchant payments, investigates anomalies, compares interventions and takes bounded, approved action.",
+  icons: {
+    icon: logo.src,
+    apple: logo.src,
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,7 +40,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+        <InstallPrompt />
+      </body>
     </html>
   );
 }

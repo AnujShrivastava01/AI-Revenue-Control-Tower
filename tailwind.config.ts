@@ -39,6 +39,7 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 1px 1px 0 rgb(11 13 16 / 0.03)",
+        "card-hover": "0 6px 20px -8px rgb(11 13 16 / 0.10), 0 2px 6px -3px rgb(11 13 16 / 0.06)",
         pop: "0 8px 24px -6px rgb(11 13 16 / 0.12), 0 2px 6px -2px rgb(11 13 16 / 0.08)",
       },
       keyframes: {

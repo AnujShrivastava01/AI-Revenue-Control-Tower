@@ -11,7 +11,10 @@ export function Panel({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-md border border-line bg-surface shadow-card", className)}
+      className={cn(
+        "rounded-lg border border-line bg-surface shadow-card transition-shadow duration-200 hover:shadow-card-hover",
+        className,
+      )}
       {...props}
     >
       {children}
