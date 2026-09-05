@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Github, Linkedin, Globe } from "lucide-react";
+import { Github, Linkedin, Globe, FileText } from "lucide-react";
 import logo from "@/app/logo.png";
 
 export function Footer() {
@@ -62,6 +62,14 @@ export function Footer() {
             className="inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-raised hover:text-ink transition-colors"
           >
             <Github size={13} /> Repository
+          </a>
+          <a
+            href="/api/docs/report"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-raised hover:text-ink transition-colors"
+          >
+            <FileText size={13} /> Documentation (PDF)
           </a>
         </div>
       </div>

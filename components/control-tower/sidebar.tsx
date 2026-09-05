@@ -60,7 +60,7 @@ export function Sidebar({
     <>
       <aside className="hidden w-[228px] shrink-0 flex-col border-r border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
         <div className="px-5 pb-5 pt-6">
-          <Link href="/command-center" className="flex items-start gap-2.5">
+          <Link href="/" className="flex items-start gap-2.5">
             <Image src={logo} alt="" width={30} height={30} className="rounded-md" />
             <div className="text-[12.5px] font-semibold uppercase leading-[1.35] tracking-[0.14em] text-ink">
               Financial
